@@ -78,8 +78,12 @@ WSGI_APPLICATION = 'textile_erp.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'textile_erp',             # The database name you just created
+        'USER': 'postgres',                # Your PostgreSQL username
+        'PASSWORD': 'mytextileerp',  # Your PostgreSQL password
+        'HOST': '192.168.1.15',             # The server's IP address you found earlier
+        'PORT': '5432',                    # Default PostgreSQL port
     }
 }
 
