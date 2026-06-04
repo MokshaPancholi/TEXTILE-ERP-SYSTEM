@@ -113,16 +113,16 @@ class Thaan(models.Model):
         # UPDATE 8: DB-level constraints
         constraints = [
             models.CheckConstraint(
-                check=models.Q(total_length__gt=0),
+                condition=models.Q(total_length__gt=0),
                 name="chk_thaan_total_length_positive",
             ),
             models.CheckConstraint(
-                check=models.Q(remaining_length__gte=0),
+                condition=models.Q(remaining_length__gte=0),
                 name="chk_thaan_remaining_length_non_negative",
             ),
             # remaining_length can never exceed what was originally received
             models.CheckConstraint(
-                check=models.Q(remaining_length__lte=models.F("total_length")),
+                condition=models.Q(remaining_length__lte=models.F("total_length")),
                 name="chk_thaan_remaining_lte_total",
             ),
         ]
@@ -207,7 +207,7 @@ class ThaanPurchase(models.Model):
         # UPDATE 8
         constraints = [
             models.CheckConstraint(
-                check=models.Q(price_paid__gte=0),
+                condition=models.Q(price_paid__gte=0),
                 name="chk_purchase_price_paid_non_negative",
             ),
         ]

@@ -87,16 +87,16 @@ class KurtaStock(models.Model):
         # UPDATE 8: DB-level constraints
         constraints = [
             models.CheckConstraint(
-                check=models.Q(produced_quantity__gte=0),
+                condition=models.Q(produced_quantity__gte=0),
                 name="chk_stock_produced_qty_non_negative",
             ),
             models.CheckConstraint(
-                check=models.Q(sold_quantity__gte=0),
+                condition=models.Q(sold_quantity__gte=0),
                 name="chk_stock_sold_qty_non_negative",
             ),
             # sold can never exceed produced at DB level
             models.CheckConstraint(
-                check=models.Q(sold_quantity__lte=models.F("produced_quantity")),
+                condition=models.Q(sold_quantity__lte=models.F("produced_quantity")),
                 name="chk_stock_sold_lte_produced",
             ),
         ]
@@ -277,11 +277,11 @@ class BillItem(models.Model):
         # UPDATE 8: DB-level constraints
         constraints = [
             models.CheckConstraint(
-                check=models.Q(quantity__gte=1),
+                condition=models.Q(quantity__gte=1),
                 name="chk_bill_item_quantity_positive",
             ),
             models.CheckConstraint(
-                check=models.Q(price__gt=0),
+                condition=models.Q(price__gt=0),
                 name="chk_bill_item_price_positive",
             ),
         ]

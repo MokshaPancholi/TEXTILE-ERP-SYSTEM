@@ -120,7 +120,7 @@ class KarigarPayment(models.Model):
         # UPDATE 8
         constraints = [
             models.CheckConstraint(
-                check=models.Q(amount_paid__gte=0),
+                condition=models.Q(amount_paid__gte=0),
                 name="chk_karigar_payment_amount_non_negative",
             ),
         ]
@@ -283,23 +283,23 @@ class Production(models.Model):
         # UPDATE 8: DB-level constraints — enforced by PostgreSQL directly
         constraints = [
             models.CheckConstraint(
-                check=models.Q(length_assigned__gt=0),
+                condition=models.Q(length_assigned__gt=0),
                 name="chk_prod_length_assigned_positive",
             ),
             models.CheckConstraint(
-                check=models.Q(planned_kurtas__gt=0),
+                condition=models.Q(planned_kurtas__gt=0),
                 name="chk_prod_planned_kurtas_positive",
             ),
             models.CheckConstraint(
-                check=models.Q(actual_kurtas_made__gte=0),
+                condition=models.Q(actual_kurtas_made__gte=0),
                 name="chk_prod_actual_kurtas_non_negative",
             ),
             models.CheckConstraint(
-                check=models.Q(price_per_piece__gte=0),
+                condition=models.Q(price_per_piece__gte=0),
                 name="chk_prod_price_per_piece_non_negative",
             ),
             models.CheckConstraint(
-                check=models.Q(remaining_length_after_making__gte=0),
+                condition=models.Q(remaining_length_after_making__gte=0),
                 name="chk_prod_remaining_length_non_negative",
             ),
         ]
