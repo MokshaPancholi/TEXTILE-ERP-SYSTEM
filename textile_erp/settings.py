@@ -80,10 +80,10 @@ AUTH_USER_MODEL = 'accounts.User'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'textile_erp',             # The database name you just created
+        'NAME': 'textile_erp',             # Th e database name you just created
         'USER': 'postgres',                # Your PostgreSQL username
         'PASSWORD': 'mytextileerp',  # Your PostgreSQL password
-        'HOST': '192.168.1.15',             # The server's IP address you found earlier
+        'HOST': '172.29.107.122',             # The server's IP address you found earlier
         'PORT': '5432',                    # Default PostgreSQL port
     }
 }
