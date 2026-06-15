@@ -83,7 +83,8 @@ DATABASES = {
         'NAME': 'textile_erp',             # Th e database name you just created
         'USER': 'postgres',                # Your PostgreSQL username
         'PASSWORD': 'mytextileerp',  # Your PostgreSQL password
-        'HOST': '172.29.107.122',             # The server's IP address you found earlier
+        # 'HOST': '172.29.107.122',             # The server's IP address you found earlier
+        'HOST': 'localhost',
         'PORT': '5432',                    # Default PostgreSQL port
     }
 }
