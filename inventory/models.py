@@ -132,10 +132,11 @@ class Thaan(models.Model):
 
     def save(self, *args, **kwargs):
         """
-        On first creation, auto-populate remaining_length = total_length
-        if the caller has not set it explicitly.
+        On first creation, auto-populate remaining_length = total_length.
+        This ALWAYS runs on new objects to prevent NULL values.
         """
-        if not self.pk and self.remaining_length is None:
+        # On creation (no primary key yet), always set remaining_length = total_length
+        if not self.pk:
             self.remaining_length = self.total_length
         super().save(*args, **kwargs)
 

@@ -165,7 +165,7 @@ class Production(models.Model):
         max_digits=10,
         decimal_places=2,
         validators=[MinValueValidator(0)],
-        default=0,
+        default=length_assigned,
         help_text="Unused cloth returned after production.",
     )
     status = models.CharField(

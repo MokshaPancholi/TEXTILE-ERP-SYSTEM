@@ -62,6 +62,21 @@ class ThaanAdmin(admin.ModelAdmin):
         }),
     )
 
+    def get_fieldsets(self, request, obj=None):
+        """
+        On Add form: hide remaining_length (it's auto-set).
+        On Edit form: show it as readonly.
+        """
+        if obj is None:
+            # Add form - don't show remaining_length, it's auto-set
+            return (
+                ("Thaan Details", {
+                    "fields": ("thaan_no", "brand", "total_length", "date_received", "status")
+                }),
+            )
+        # Edit form - show readonly fields
+        return self.fieldsets
+
     def assigned_length_display(self, obj):
         return f"{obj.assigned_length} m"
     assigned_length_display.short_description = "Assigned Length"
