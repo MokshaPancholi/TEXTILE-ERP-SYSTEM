@@ -1,22 +1,23 @@
 """
-URL configuration for textile_erp project.
+textile_erp/urls.py (MAIN PROJECT)
+===================================
+Main URL routing for Textile ERP.
+Include all app-level urls here.
 
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/6.0/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
+This file should be named urls.py in your project root.
+Django setting: ROOT_URLCONF = 'textile_erp.urls'
 """
+
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    # Admin panel
+    path("admin/", admin.site.urls),
+
+    # App-level URLs
+    path("api/accounts/", include("accounts.urls")),
+    path("api/inventory/", include("inventory.urls")),
+    path("api/production/", include("production.urls")),
+    path("api/sales/", include("sales.urls")),
 ]
