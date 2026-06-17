@@ -18,6 +18,8 @@ urlpatterns = [
     path("bills/list/", views.list_bills, name="list_bills"),
     path("bills/items/add/", views.add_bill_item, name="add_bill_item"),
 
+    path('bills/<int:bill_no>/pdf/', views.generate_bill_pdf, name='generate_bill_pdf'),
+
     # Reports
     path("reports/stock/", views.stock_report, name="stock_report"),
     path("reports/sales/", views.sales_report, name="sales_report"),

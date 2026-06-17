@@ -14,7 +14,15 @@ from django.db.models import Sum, F
 from decimal import Decimal
 from .models import KurtaStock, Bill, BillItem
 from inventory.models import Thaan
+from django.shortcuts import get_object_or_404
+from django.http import HttpResponse
 
+# ReportLab imports for PDF generation
+from reportlab.lib.pagesizes import A4
+from reportlab.lib import colors
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.enums import TA_CENTER, TA_RIGHT
 
 # ---------------------------------------------------------------------------
 # STOCK MANAGEMENT
@@ -277,3 +285,96 @@ def customer_sales_history(request, customer_name):
         "bills": list(bills),
         "total_spent": float(total),
     })
+
+
+# ---------------------------------------------------------------------------
+# PDF INVOICE GENERATION
+# ---------------------------------------------------------------------------
+
+@login_required
+def generate_bill_pdf(request, bill_no):
+    # Fetch the Bill
+    bill = get_object_or_404(Bill, pk=bill_no)
+
+    # Setup the HTTP Response
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="invoice_B{bill.bill_no}.pdf"'
+
+    # Initialize Document
+    doc = SimpleDocTemplate(
+        response,
+        pagesize=A4,
+        rightMargin=40, leftMargin=40,
+        topMargin=50, bottomMargin=50
+    )
+
+    elements = []
+    styles = getSampleStyleSheet()
+
+    title_style = ParagraphStyle(name='Title', parent=styles['Heading1'], alignment=TA_CENTER, fontSize=20,
+                                 spaceAfter=10)
+    normal_style = styles['Normal']
+    right_align_style = ParagraphStyle(name='RightAlign', parent=styles['Normal'], alignment=TA_RIGHT)
+
+    # Build Header
+    elements.append(Paragraph("<b>TEXTILE ERP INVOICE</b>", title_style))
+    elements.append(Spacer(1, 20))
+
+    # Build Bill Details
+    bill_info_data = [
+        [
+            Paragraph(f"<b>Bill Number:</b> B{bill.bill_no}", normal_style),
+            Paragraph(f"<b>Date:</b> {bill.bill_date.strftime('%d %B %Y')}", right_align_style)
+        ],
+        [
+            Paragraph(f"<b>Customer Name:</b> {bill.customer_name}", normal_style),
+            ""
+        ]
+    ]
+    info_table = Table(bill_info_data, colWidths=[260, 260])
+    info_table.setStyle(TableStyle([('VALIGN', (0, 0), (-1, -1), 'TOP')]))
+    elements.append(info_table)
+    elements.append(Spacer(1, 20))
+
+    # Build the Items Table
+    table_data = [['Product Description', 'Size', 'Qty', 'Price (Rs)', 'Subtotal (Rs)']]
+
+    for item in bill.items.all():
+        table_data.append([
+            f"Kurta (Thaan #{item.stock.thaan_id})",
+            str(item.size),
+            str(item.quantity),
+            f"{item.price}",
+            f"{item.subtotal}"
+        ])
+
+    table_data.append(['', '', '', '', ''])
+    table_data.append(['', '', 'Total Qty:', str(bill.total_quantity), ''])
+    table_data.append(['', '', '', 'Grand Total:', f"Rs {bill.total_price}"])
+
+    item_table = Table(table_data, colWidths=[180, 50, 50, 110, 130])
+    item_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#2C3E50")),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 10),
+        ('TOPPADDING', (0, 0), (-1, 0), 10),
+        ('ALIGN', (0, 1), (0, -1), 'LEFT'),
+        ('ALIGN', (1, 1), (2, -1), 'CENTER'),
+        ('ALIGN', (3, 1), (-1, -1), 'RIGHT'),
+        ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+        ('GRID', (0, 0), (-1, -4), 1, colors.HexColor("#BDC3C7")),
+        ('LINEABOVE', (2, -2), (3, -2), 1, colors.black),
+        ('LINEABOVE', (3, -1), (4, -1), 1, colors.black),
+        ('FONTNAME', (2, -2), (-1, -1), 'Helvetica-Bold'),
+    ]))
+    elements.append(item_table)
+    elements.append(Spacer(1, 40))
+
+    elements.append(Paragraph("<b>Thank you for your business!</b>", ParagraphStyle(
+        name='Footer', parent=styles['Normal'], alignment=TA_CENTER
+    )))
+
+    doc.build(elements)
+    return response
