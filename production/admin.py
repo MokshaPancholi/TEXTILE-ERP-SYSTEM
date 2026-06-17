@@ -35,11 +35,40 @@ class KarigarAdmin(admin.ModelAdmin):
 
 @admin.register(KarigarPayment)
 class KarigarPaymentAdmin(admin.ModelAdmin):
-    list_display = ("payment_id", "karigar", "payment_date", "amount_paid", "payment_status")
+    list_display = (
+        "payment_id", "karigar", "payment_date",
+        "amount_paid", "payment_status", "pending_balance_display"
+    )
     list_filter = ("payment_status", "payment_date")
     search_fields = ("karigar__name",)
     ordering = ("-payment_date",)
-    list_editable = ("payment_status",)
+
+    def pending_balance_display(self, obj):
+        if not obj or not obj.pk:
+            return "—"
+
+        balance = obj.karigar_balance_due
+
+        if balance > 0:
+            return format_html(
+                '<span style="color:red; font-weight:bold;">₹{} Due</span>',
+                balance
+            )
+        elif balance < 0:
+            return format_html(
+                '<span style="color:blue; font-weight:bold;">₹{} Advance</span>',
+                abs(balance)
+            )
+
+        # FIX: Added {} and passed the text as an argument!
+        return format_html(
+            '<span style="color:green; font-weight:bold;">{}</span>',
+            "Cleared (₹0)"
+        )
+
+    pending_balance_display.short_description = "Pending Balance"
+
+    pending_balance_display.short_description = "Pending Balance"
 
 
 @admin.register(Production)

@@ -8,6 +8,7 @@ BUG FIXES:
     - get_readonly_fields() hides computed fields on Add forms
     - BillItemInline subtotal_display safe on unsaved inline rows
     - Added invoice_pdf_link to download the PDF bill directly from the Admin panel
+    - Fixed format_html TypeError in stock_status_badge
 """
 
 from django.contrib import admin
@@ -47,9 +48,12 @@ class KurtaStockAdmin(admin.ModelAdmin):
     def stock_status_badge(self, obj):
         if not obj or not obj.pk:
             return "—"
+
         if obj.is_out_of_stock:
+            # FIX: format_html requires an argument when formatting text
             return format_html(
-                '<span style="color:red; font-weight:bold;">OUT OF STOCK</span>'
+                '<span style="color:red; font-weight:bold;">{}</span>',
+                "OUT OF STOCK"
             )
         elif obj.stock_quantity <= 5:
             return format_html(
@@ -91,7 +95,7 @@ class BillAdmin(admin.ModelAdmin):
     list_display    = (
         "bill_no", "customer_name", "bill_date",
         "total_quantity_display", "total_price_display",
-        "invoice_pdf_link"  # <--- Reference here
+        "invoice_pdf_link"
     )
     list_filter     = ("bill_date",)
     search_fields   = ("customer_name", "bill_no")
@@ -135,7 +139,6 @@ class BillAdmin(admin.ModelAdmin):
         return f"₹{obj.total_price}"
     total_price_display.short_description = "Total Price"
 
-    # ▼ THIS MUST BE INDENTED INSIDE THE BillAdmin CLASS ▼
     def invoice_pdf_link(self, obj):
         """Generates a button to download the PDF invoice."""
         if not obj or not obj.pk:
@@ -147,4 +150,40 @@ class BillAdmin(admin.ModelAdmin):
             'Download Invoice</a>', url
         )
     invoice_pdf_link.short_description = "Action"
-    # ▲ MUST BE INDENTED INSIDE THE CLASS ▲
+
+
+# ---------------------------------------------------------------------------
+# BILL ITEM (standalone)
+# ---------------------------------------------------------------------------
+
+@admin.register(BillItem)
+class BillItemAdmin(admin.ModelAdmin):
+    list_display    = (
+        "item_id", "bill", "stock",
+        "size_display", "quantity",
+        "price", "subtotal_display",
+    )
+    list_filter     = ("stock__size", "bill__bill_date")
+    search_fields   = ("bill__customer_name", "bill__bill_no", "stock__thaan__thaan_no")
+    ordering        = ("bill",)
+    readonly_fields = ("size_display", "subtotal_display")
+
+    def get_readonly_fields(self, request, obj=None):
+        """Hide computed fields on Add form."""
+        if obj is None:
+            return ()
+        return ("size_display", "subtotal_display")
+
+    def size_display(self, obj):
+        if not obj or not obj.pk:
+            return "—"
+        return obj.size
+    size_display.short_description = "Size"
+
+    def subtotal_display(self, obj):
+        if not obj or not obj.pk:
+            return "—"
+        if obj.quantity is None or obj.price is None:
+            return "—"
+        return f"₹{obj.subtotal}"
+    subtotal_display.short_description = "Subtotal"
