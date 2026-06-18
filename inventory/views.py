@@ -11,7 +11,7 @@ from django.contrib.auth.decorators import login_required
 from django.db import transaction
 from django.db.models import Sum
 from decimal import Decimal
-from .models import Brand, Thaan, ThaanPurchase
+from .models import Brand, Thaan
 
 
 # ---------------------------------------------------------------------------

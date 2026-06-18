@@ -2,18 +2,11 @@
 sales/admin.py
 ==============
 Django Admin for KurtaStock, Bill, BillItem.
-
-BUG FIXES:
-    - All computed readonly display methods now guard against obj=None / obj.pk=None
-    - get_readonly_fields() hides computed fields on Add forms
-    - BillItemInline subtotal_display safe on unsaved inline rows
-    - Added invoice_pdf_link to download the PDF bill directly from the Admin panel
-    - Fixed format_html TypeError in stock_status_badge
 """
 
 from django.contrib import admin
 from django.utils.html import format_html
-from django.urls import reverse  # Added for PDF generation routing
+from django.urls import reverse
 from .models import KurtaStock, Bill, BillItem
 
 
@@ -34,7 +27,6 @@ class KurtaStockAdmin(admin.ModelAdmin):
     readonly_fields = ("stock_quantity_display", "stock_status_badge")
 
     def get_readonly_fields(self, request, obj=None):
-        """Hide computed fields on Add form — no data to compute yet."""
         if obj is None:
             return ()
         return ("stock_quantity_display", "stock_status_badge")
@@ -50,7 +42,6 @@ class KurtaStockAdmin(admin.ModelAdmin):
             return "—"
 
         if obj.is_out_of_stock:
-            # FIX: format_html requires an argument when formatting text
             return format_html(
                 '<span style="color:red; font-weight:bold;">{}</span>',
                 "OUT OF STOCK"
@@ -78,7 +69,6 @@ class BillItemInline(admin.TabularInline):
     readonly_fields = ("subtotal_display",)
 
     def subtotal_display(self, obj):
-        # Guard: inline row not yet saved has no pk
         if not obj or not obj.pk:
             return "—"
         if obj.quantity is None or obj.price is None:
@@ -90,10 +80,12 @@ class BillItemInline(admin.TabularInline):
 # ---------------------------------------------------------------------------
 # BILL
 # ---------------------------------------------------------------------------
+
 @admin.register(Bill)
 class BillAdmin(admin.ModelAdmin):
     list_display    = (
         "bill_no", "customer_name", "bill_date",
+        "items_summary",  # Added to merge item data view
         "total_quantity_display", "total_price_display",
         "invoice_pdf_link"
     )
@@ -127,6 +119,17 @@ class BillAdmin(admin.ModelAdmin):
             return ()
         return ("total_quantity_display", "total_price_display")
 
+    def items_summary(self, obj):
+        """Displays a summary of all items in the list view for easy analysis."""
+        if not obj or not obj.pk:
+            return "—"
+        items = obj.items.all().select_related('stock')
+        if not items:
+            return "No items"
+        summary = [f"Size {item.stock.size} (x{item.quantity})" for item in items]
+        return ", ".join(summary)
+    items_summary.short_description = "Purchased Items"
+
     def total_quantity_display(self, obj):
         if not obj or not obj.pk:
             return "—"
@@ -140,7 +143,6 @@ class BillAdmin(admin.ModelAdmin):
     total_price_display.short_description = "Total Price"
 
     def invoice_pdf_link(self, obj):
-        """Generates a button to download the PDF invoice."""
         if not obj or not obj.pk:
             return "—"
         url = reverse('sales:generate_bill_pdf', args=[obj.pk])
@@ -169,7 +171,6 @@ class BillItemAdmin(admin.ModelAdmin):
     readonly_fields = ("size_display", "subtotal_display")
 
     def get_readonly_fields(self, request, obj=None):
-        """Hide computed fields on Add form."""
         if obj is None:
             return ()
         return ("size_display", "subtotal_display")

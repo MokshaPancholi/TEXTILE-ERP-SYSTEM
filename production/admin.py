@@ -2,8 +2,6 @@
 production/admin.py
 ===================
 Django Admin for Karigar, KarigarPayment, Production.
-
-FIX: Fieldsets now dynamically exclude computed fields on Add form.
 """
 
 from django.contrib import admin
@@ -14,7 +12,7 @@ from .models import Karigar, KarigarPayment, Production
 class KarigarPaymentInline(admin.TabularInline):
     model = KarigarPayment
     extra = 0
-    fields = ("payment_date", "amount_paid", "payment_status", "remarks")
+    fields = ("payment_date", "amount_paid", "remarks")
 
 
 @admin.register(Karigar)
@@ -37,9 +35,9 @@ class KarigarAdmin(admin.ModelAdmin):
 class KarigarPaymentAdmin(admin.ModelAdmin):
     list_display = (
         "payment_id", "karigar", "payment_date",
-        "amount_paid", "payment_status", "pending_balance_display"
+        "amount_paid", "pending_balance_display"
     )
-    list_filter = ("payment_status", "payment_date")
+    list_filter = ("payment_date",)
     search_fields = ("karigar__name",)
     ordering = ("-payment_date",)
 
@@ -60,13 +58,10 @@ class KarigarPaymentAdmin(admin.ModelAdmin):
                 abs(balance)
             )
 
-        # FIX: Added {} and passed the text as an argument!
         return format_html(
             '<span style="color:green; font-weight:bold;">{}</span>',
             "Cleared (₹0)"
         )
-
-    pending_balance_display.short_description = "Pending Balance"
 
     pending_balance_display.short_description = "Pending Balance"
 
@@ -85,9 +80,7 @@ class ProductionAdmin(admin.ModelAdmin):
     readonly_fields = ("remaining_kurtas_display", "labour_cost_display")
 
     def get_fieldsets(self, request, obj=None):
-        """Dynamically build fieldsets — exclude computed fields on Add form."""
         if obj is None:
-            # Add form — no computed fields
             return (
                 ("Assignment", {
                     "fields": ("thaan", "karigar", "date_assigned", "status")
@@ -102,7 +95,6 @@ class ProductionAdmin(admin.ModelAdmin):
                     "fields": ("price_per_piece",)
                 }),
             )
-        # Change form — include computed fields
         return (
             ("Assignment", {
                 "fields": ("thaan", "karigar", "date_assigned", "status")

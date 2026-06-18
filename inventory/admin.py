@@ -6,7 +6,7 @@ Django Admin configuration for Brand, Thaan, ThaanPurchase.
 
 from django.contrib import admin
 from django.utils.html import format_html
-from .models import Brand, Thaan, ThaanPurchase
+from .models import Brand, Thaan
 
 
 # ---------------------------------------------------------------------------
@@ -24,16 +24,6 @@ class BrandAdmin(admin.ModelAdmin):
     total_thaans.short_description = "Total Thaans"
 
 
-# ---------------------------------------------------------------------------
-# THAAN PURCHASE (inline inside Thaan)
-# ---------------------------------------------------------------------------
-
-class ThaanPurchaseInline(admin.TabularInline):
-    model       = ThaanPurchase
-    extra       = 0
-    fields      = ("invoice_number", "purchase_date", "price_paid", "payment_status")
-    readonly_fields = ("invoice_number",)
-
 
 # ---------------------------------------------------------------------------
 # THAAN
@@ -50,7 +40,6 @@ class ThaanAdmin(admin.ModelAdmin):
     search_fields   = ("thaan_no", "brand__brand_name")
     ordering        = ("-date_received",)
     readonly_fields = ("remaining_length", "assigned_length_display")
-    inlines         = [ThaanPurchaseInline]
 
     fieldsets = (
         ("Thaan Details", {
@@ -89,19 +78,3 @@ class ThaanAdmin(admin.ModelAdmin):
         )
     colored_status.short_description = "Status"
 
-
-# ---------------------------------------------------------------------------
-# THAAN PURCHASE
-# ---------------------------------------------------------------------------
-
-@admin.register(ThaanPurchase)
-class ThaanPurchaseAdmin(admin.ModelAdmin):
-    list_display    = (
-        "purchase_id", "thaan", "brand",
-        "invoice_number", "purchase_date",
-        "price_paid", "payment_status",
-    )
-    list_filter     = ("payment_status", "brand", "purchase_date")
-    search_fields   = ("invoice_number", "thaan__thaan_no", "brand__brand_name")
-    ordering        = ("-purchase_date",)
-    list_editable   = ("payment_status",)

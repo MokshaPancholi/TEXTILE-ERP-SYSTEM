@@ -41,16 +41,6 @@ class Karigar(models.Model):
 # ---------------------------------------------------------------------------
 
 class KarigarPayment(models.Model):
-    PAYMENT_PENDING = "pending"
-    PAYMENT_PARTIAL = "partial"
-    PAYMENT_PAID    = "paid"
-
-    PAYMENT_STATUS_CHOICES = [
-        (PAYMENT_PENDING, "Pending"),
-        (PAYMENT_PARTIAL, "Partial"),
-        (PAYMENT_PAID,    "Paid"),
-    ]
-
     payment_id     = models.AutoField(primary_key=True)
     karigar        = models.ForeignKey(
         Karigar,
@@ -62,11 +52,6 @@ class KarigarPayment(models.Model):
         max_digits=12,
         decimal_places=2,
         validators=[MinValueValidator(0)],
-    )
-    payment_status = models.CharField(
-        max_length=10,
-        choices=PAYMENT_STATUS_CHOICES,
-        default=PAYMENT_PENDING,
     )
     remarks = models.TextField(blank=True, default="")
 
@@ -86,7 +71,7 @@ class KarigarPayment(models.Model):
         return (
             f"Payment #{self.payment_id} — "
             f"{self.karigar.name} — "
-            f"₹{self.amount_paid} [{self.get_payment_status_display()}] "
+            f"₹{self.amount_paid} "
             f"on {self.payment_date}"
         )
 
@@ -215,28 +200,17 @@ class Production(models.Model):
             f"Karigar: {self.karigar.name}"
         )
 
-    # ------------------------------------------------------------------
-    # BUG FIX: Guard all properties against None (new unsaved objects
-    # have None field values when the admin Add form first renders)
-    # ------------------------------------------------------------------
-
     @property
     def remaining_kurtas(self):
-        """Kurtas still to be produced. Returns None if object not saved yet."""
         if self.planned_kurtas is None or self.actual_kurtas_made is None:
             return None
         return max(self.planned_kurtas - self.actual_kurtas_made, 0)
 
     @property
     def labour_cost_total(self):
-        """Total labour cost. Returns None if object not saved yet."""
         if self.actual_kurtas_made is None or self.price_per_piece is None:
             return None
         return self.actual_kurtas_made * self.price_per_piece
-
-    # ------------------------------------------------------------------
-    # Validation: total assigned length must not exceed thaan.total_length
-    # ------------------------------------------------------------------
 
     def clean(self):
         from django.db.models import Sum
