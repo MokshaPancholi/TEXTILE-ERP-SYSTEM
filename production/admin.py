@@ -33,14 +33,23 @@ class KarigarAdmin(admin.ModelAdmin):
 
 @admin.register(KarigarPayment)
 class KarigarPaymentAdmin(admin.ModelAdmin):
+    # 1. Added 'total_paid_display' to list_display
     list_display = (
         "payment_id", "karigar", "payment_date",
-        "amount_paid", "pending_balance_display"
+        "amount_paid", "total_paid_display", "pending_balance_display"
     )
     list_filter = ("payment_date",)
     search_fields = ("karigar__name",)
     ordering = ("-payment_date",)
 
+    # 2. Add this method to display the total paid
+    def total_paid_display(self, obj):
+        if not obj or not obj.pk:
+            return "—"
+        return f"₹{obj.karigar_total_paid}"
+    total_paid_display.short_description = "Total Paid"
+
+    # ... keep your existing pending_balance_display method ...
     def pending_balance_display(self, obj):
         if not obj or not obj.pk:
             return "—"
@@ -62,7 +71,6 @@ class KarigarPaymentAdmin(admin.ModelAdmin):
             '<span style="color:green; font-weight:bold;">{}</span>',
             "Cleared (₹0)"
         )
-
     pending_balance_display.short_description = "Pending Balance"
 
 

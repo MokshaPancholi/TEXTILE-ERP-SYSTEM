@@ -78,3 +78,18 @@ class ThaanAdmin(admin.ModelAdmin):
         )
     colored_status.short_description = "Status"
 
+    def get_changeform_initial_data(self, request):
+        """
+        Auto-populate the next Thaan Number based on the highest existing number.
+        If the last entered thaan_no was 10, this will pre-fill the box with 11.
+        """
+        initial = super().get_changeform_initial_data(request)
+        from django.db.models import Max
+
+        # Find the highest existing thaan_no in the database
+        highest_thaan = Thaan.objects.aggregate(max_no=Max('thaan_no'))['max_no']
+
+        if highest_thaan:
+            initial['thaan_no'] = highest_thaan + 1
+
+        return initial
